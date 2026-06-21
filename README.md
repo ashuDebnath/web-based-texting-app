@@ -28,8 +28,6 @@ A full-stack, end-to-end encrypted group chat application built with Node.js/Exp
 
 ## Database schema
 
-See `server/src/db/migrations/001_init.sql` for the full schema. Key tables:
-
 - `users` — accounts + public keys
 - `groups` / `group_members` — conversations and membership (incl. per-member wrapped group key)
 - `invite_links` — shareable join tokens
@@ -37,7 +35,3 @@ See `server/src/db/migrations/001_init.sql` for the full schema. Key tables:
 - `attachments` — encrypted file metadata
 - `message_delivery_queue` — offline delivery tracking
 - `read_receipts` — per-user read state
-
-## Environment variables
-
-See `server/.env.example` and `client/.env.example` for the full list. At minimum, change `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` to long random strings before deploying anywhere public.
