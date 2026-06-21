@@ -17,77 +17,6 @@ A full-stack, end-to-end encrypted group chat application built with Node.js/Exp
 
 ---
 
-## Quickest start: Docker Compose
-
-This runs PostgreSQL, the API server, and the web client together, with the database schema created automatically. You only need Docker installed.
-
-```bash
-# From the project root
-docker compose up --build
-```
-
-Then open **http://localhost:5173** in your browser. The API runs on `http://localhost:4000`.
-
-To stop:
-
-```bash
-docker compose down
-```
-
-To stop and wipe the database/uploads too:
-
-```bash
-docker compose down -v
-```
-
-> The first run builds images and runs database migrations automatically — no manual setup required.
-
----
-
-## Manual setup (without Docker)
-
-### Prerequisites
-
-- Node.js 18+
-- PostgreSQL 13+ running locally (or any reachable instance)
-
-### 1. Database
-
-Create a database:
-
-```bash
-createdb chatapp
-```
-
-(Or via psql: `CREATE DATABASE chatapp;`)
-
-### 2. Server
-
-```bash
-cd server
-cp .env.example .env
-# Edit .env if your DATABASE_URL, ports, or JWT secrets need to differ from the defaults
-npm install
-npm run migrate   # creates all tables
-npm run dev        # starts on http://localhost:4000 with auto-reload
-# or: npm start
-```
-
-### 3. Client
-
-In a second terminal:
-
-```bash
-cd client
-cp .env.example .env
-npm install
-npm run dev         # starts on http://localhost:5173
-```
-
-Open **http://localhost:5173**.
-
----
-
 ## How the encryption works
 
 1. On sign-up, your browser generates an RSA-OAEP keypair. The **private key never leaves your device** (stored in `localStorage`); the **public key** is uploaded so others can encrypt things for you.
@@ -96,30 +25,6 @@ Open **http://localhost:5173**.
 4. When you open a conversation, your browser unwraps the group key with your private key (locally) and decrypts messages as they arrive.
 5. **Joining via an invite link**: a new member joins without a key at first. If another member is online, their browser automatically re-wraps the group key for the newcomer and delivers it — so the conversation stays end-to-end encrypted even for link-based joins. If no member is online at join time, the newcomer's client will pick up the key automatically the next time someone who has it comes online.
 6. **New device / cleared storage**: since the private key only lives on the device that created it, logging in on a new device can't decrypt old history by design (this is standard E2E behavior — there's no master key on the server that could do this safely). The app will prompt you to generate a new keypair, which works for new messages going forward.
-
-## Architecture
-
-```
-chatapp/
-├── docker-compose.yml        # one-command full-stack deploy
-├── server/                   # Node/Express + Socket.IO API
-│   └── src/
-│       ├── config/           # env, db pool, multer
-│       ├── controllers/      # request handlers
-│       ├── middleware/       # auth, rate limiting, error handling
-│       ├── models/           # SQL queries (no ORM)
-│       ├── routes/           # Express routers
-│       ├── sockets/          # Socket.IO handlers, presence, rate limiting
-│       ├── db/migrations/    # SQL schema
-│       └── server.js         # entrypoint
-└── client/                   # React (Vite) SPA
-    └── src/
-        ├── components/       # UI components
-        ├── pages/            # route-level pages
-        ├── context/          # Auth & Chat React contexts
-        ├── crypto/           # Web Crypto E2E encryption layer
-        └── utils/            # API client, socket client, search
-```
 
 ## Database schema
 
@@ -140,6 +45,7 @@ See `server/.env.example` and `client/.env.example` for the full list. At minimu
 ## Notes on production hardening
 
 This project is built to run correctly out of the box, but if you deploy it publicly, consider:
+
 - Serving the client over HTTPS and updating `CLIENT_ORIGIN` / `VITE_API_URL` / `VITE_SOCKET_URL` accordingly.
 - Storing the private key in IndexedDB with non-extractable keys, or behind a passphrase, instead of plain `localStorage`.
 - Putting the `uploads/` directory behind object storage (S3, GCS) rather than local disk for multi-instance deployments.
