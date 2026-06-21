@@ -41,12 +41,3 @@ See `server/src/db/migrations/001_init.sql` for the full schema. Key tables:
 ## Environment variables
 
 See `server/.env.example` and `client/.env.example` for the full list. At minimum, change `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` to long random strings before deploying anywhere public.
-
-## Notes on production hardening
-
-This project is built to run correctly out of the box, but if you deploy it publicly, consider:
-
-- Serving the client over HTTPS and updating `CLIENT_ORIGIN` / `VITE_API_URL` / `VITE_SOCKET_URL` accordingly.
-- Storing the private key in IndexedDB with non-extractable keys, or behind a passphrase, instead of plain `localStorage`.
-- Putting the `uploads/` directory behind object storage (S3, GCS) rather than local disk for multi-instance deployments.
-- Swapping the in-memory Socket.IO rate limiter / presence tracker for a Redis-backed version if you run more than one server instance (so state is shared across instances).
