@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chatapp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chatapp
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: ./server
+    container_name: chatapp-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      CLIENT_ORIGIN: http://localhost:5173
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/chatapp
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_this_access_secret_in_production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_secret_in_production}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 30d
+      UPLOAD_DIR: uploads
+      MAX_FILE_SIZE_MB: 25
+      RATE_LIMIT_WINDOW_MS: 60000
+      RATE_LIMIT_MAX_REQUESTS: 100
+    ports:
+      - '4000:4000'
+    volumes:
+      - uploads-data:/app/uploads
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: http://localhost:4000/api
+        VITE_SOCKET_URL: http://localhost:4000
+    container_name: chatapp-client
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - '5173:5173'
+
+volumes:
+  postgres-data:
+  uploads-data:
